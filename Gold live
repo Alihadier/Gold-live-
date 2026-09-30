@@ -1,0 +1,63 @@
+plugins {
+    id("com.android.application") version "8.5.2" apply false
+    id("org.jetbrains.kotlin.android") version "1.9.24" apply false
+}
+
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoldLock-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+org.gradle.jvmargs=-Xmx2048m
+android.useAndroidX=false
+
+# Gold Lock – build the APK without installing anything
+
+1. Create a free account at github.com and make a **new repository** (name: GoldLock).
+2. Unzip this project on a computer (or use a phone file manager) and upload ALL files/folders
+   via "Add file > Upload files".
+   - The hidden folder `.github` may not upload. If the "Actions" tab shows no workflow,
+     click "Add file > Create new file", type the name `.github/workflows/build.yml`,
+     and paste the contents of `build.yml.copy`.
+3. Open the **Actions** tab > "Build APK" > wait ~3-5 min for the green check
+   (use "Run workflow" if it didn't start).
+4. Open the finished run > **Artifacts** > download `GoldLock-apk` (zip) > extract `app-debug.apk`.
+5. Send it to your Galaxy S23, tap it, and allow "Install unknown apps" when asked.
+6. Open **Gold Lock**, allow notifications.
+
+## Make it show on the lock screen
+- Settings > Lock screen > Notifications > On, and choose "Details" (not "Icons only").
+- Settings > Apps > Gold Lock > Notifications > make sure "Gold price" is on.
+- Settings > Apps > Gold Lock > Battery > **Unrestricted**, so Samsung doesn't kill it.
+
+## Notes
+- Price source: gold-api.com (free, no key), refreshed every 30 s. Change REFRESH_MS in PriceService.kt.
+- It's spot XAU/USD, "live" within seconds, not tick-by-tick.
+- It restarts after a phone reboot.
+
+pluginManagement {
+    repositories { google(); mavenCentral(); gradlePluginPortal() }
+}
+dependencyResolutionManagement {
+    repositories { google(); mavenCentral() }
+}
+rootProject.name = "GoldLock"
+include(":app")
